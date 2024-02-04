@@ -1,10 +1,10 @@
 use std::f32::consts::PI;
 
 turbo::cfg! {r#"
-    name = "Circle Shooter"
+    name = "Fruit-apult"
     version = "1.0.0"
     author = "Turbo"
-    description = "Shoot circles at a target"
+    description = "Shoot matching fruits!"
     [settings]
     resolution = [300, 300]
 "#}
