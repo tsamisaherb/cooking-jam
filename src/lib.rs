@@ -74,6 +74,8 @@ turbo::go! {
     // Set the background color
 clear(0xADD8E6);
 
+//check for game over state.
+//The player gets a 'final shot' so the game isn't over until the timer is done and they took their last shot.
 if state.game_timer <= 0.0 && state.projectiles.len() == 0{
     state.game_is_over = true
 }
@@ -87,8 +89,9 @@ if state.game_timer <= 0.0 && state.projectiles.len() == 0{
      text!(&format!("Time Left: {}", (state.game_timer / 60.0 ) as i32), x = 10, y = 30, font = Font::L, color = 0xFF0000);
  }
 
+//the main game logic runs only when the game isn't over 
 if !state.game_is_over{
-    //make a new target when the game starts
+    //spawn a new target
     if state.targets.len() == 0 || state.target_timer <= 0.0{
         let target = Target {
             x: -32.0,
@@ -101,6 +104,7 @@ if !state.game_is_over{
         state.targets.push(target);
         state.target_timer = state.target_timer_max
     }
+    //spawn a new cloud
     if state.clouds.len() == 0 || state.cloud_timer <= 0.0{
         let cloud = Cloud {
             x: -32.0,
@@ -110,27 +114,29 @@ if !state.game_is_over{
         state.clouds.push(cloud);
         state.cloud_timer = state.cloud_timer_max
     }
- //update the clouds
- state.clouds.retain_mut(|cloud|{
-    // Draw the cloud
-    sprite!("cloud", x = cloud.x as i32, y = cloud.y as i32);
-    cloud.x += cloud.vel_x;
-        
-    if cloud.x > resolution()[0] as f32{
-        false
-    }
-    else{
-        true
-    }
-});
-    //iterate target timer and make a new target if you need one
-    state.target_timer = state.target_timer -1.0;
-    state.cloud_timer = state.cloud_timer - 1.0;
+    //update the clouds
+    state.clouds.retain_mut(|cloud|{
+        // Draw the cloud
+        sprite!("cloud", x = cloud.x as i32, y = cloud.y as i32);
+        cloud.x += cloud.vel_x;
+            
+        if cloud.x > resolution()[0] as f32{
+            false
+        }
+        else{
+            true
+        }
+    });
+    
+    //subtract 1 from the timers
+    state.target_timer -= 1.0;
+    state.cloud_timer -= 1.0;
     state.game_timer -= 1.0;
     if state.game_timer < 0.0 {
         state.game_timer = 0.0
     }
-    //make a new projectile when the game starts
+    
+    //make a new projectile whenever you don't have one
     if state.projectiles.len() == 0 {
         //create projectile
         let projectile = Projectile {
@@ -173,6 +179,7 @@ if !state.game_is_over{
             let hit = distance < projectile.radius + target.radius 
             && projectile.kind == target.kind;
             if hit {
+                //score 3 points for the top row, 2 for middle row, and 1 for bottom row.
                 if target.y <30.0{
                     score_add = 3
                 }
@@ -187,8 +194,6 @@ if !state.game_is_over{
             return !hit
         });
 
-       // if distance < projectile.radius + state.target.radius 
-       // && projectile.kind == state.target.kind{
        if hit_target{ 
             if state.game_timer == 0.0{
                 score_add = score_add * 2;
@@ -212,9 +217,9 @@ if !state.game_is_over{
     //draw the arrow
     sprite!("arrow", x = state.arrow.x as i32, y = state.arrow.y as i32, deg = state.arrow.rot as i32);
     
-    //update the target
+    //update the targets
     state.targets.retain_mut(|target|{
-        // Draw the target
+        // Draw the targets
         let sprite_name = format!("{:?}", target.kind).to_lowercase();
         sprite!(&sprite_name, x = target.x as i32, y = target.y as i32);
         target.x += target.vel_x;
